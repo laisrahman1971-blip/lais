@@ -1,46 +1,163 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Smart Ammeter</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<title>Intelligent Based Energy Monitoring System</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: white;
+    text-align: center;
+}
+
+h1 {
+    margin: 30px 0;
+    font-size: 40px;
+}
+
+.container {
+    width: 90%;
+    margin: auto;
+}
+
+.row {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.box {
+    width: 250px;
+    height: 120px;
+    background: #f5f5f5;
+    border-radius: 20px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    padding: 20px;
+}
+
+.box h2 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.box p {
+    font-size: 28px;
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+canvas {
+    max-width: 100%;
+    margin: 30px auto;
+}
+</style>
 </head>
 
-<body style="font-family: Arial; text-align: center;">
+<body>
 
-  <h2>Smart Ammeter Dashboard</h2>
+<h1>Intelligent Based Energy Monitoring System</h1>
 
-  <p>Current: <span id="current">0</span> A</p>
-  <p>Voltage: <span id="voltage">0</span> V</p>
-  <p>Power: <span id="power">0</span> W</p>
+<div class="container">
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <div class="row">
+        <div class="box"><h2>Voltage (V)</h2><p id="voltage">0</p></div>
+        <div class="box"><h2>Current (A)</h2><p id="current">0</p></div>
+    </div>
 
-  <script>
-    const firebaseConfig = {
-    apiKey: "AIzaSyCmNDd0L_EZ0JbZIzsVUUFJOHInOVGcNEY",
-    authDomain: "smart-ammeter.firebaseapp.com",
-    databaseURL: "https://smart-ammeter-default-rtdb.firebaseio.com",
-    projectId: "smart-ammeter",
-    storageBucket: "smart-ammeter.firebasestorage.app",
-    messagingSenderId: "222508610296",
-    appId: "1:222508610296:web:4304a37efa0013f785c10d",
-    measurementId: "G-8CTL2GGFWZ"
-  };
-    firebase.initializeApp(firebaseConfig);
+    <div class="row">
+        <div class="box"><h2>Frequency (Hz)</h2><p id="frequency">0</p></div>
+        <div class="box"><h2>Power Factor</h2><p id="pf">0</p></div>
+    </div>
 
-    const db = firebase.database();
+    <div class="row">
+        <div class="box"><h2>Power (W)</h2><p id="power">0</p></div>
+        <div class="box"><h2>Energy (kWh)</h2><p id="energy">0</p></div>
+    </div>
 
-    db.ref("meter").on("value", (snapshot) => {
-      const data = snapshot.val();
+    <div class="row">
+        <div class="box"><h2>Security Status</h2><p id="security">Normal</p></div>
+    </div>
 
-      document.getElementById("current").innerText = data.current;
-      document.getElementById("voltage").innerText = data.voltage;
-      document.getElementById("power").innerText =
-        (data.current * data.voltage).toFixed(2);
+    <canvas id="voltageChart"></canvas>
+    <canvas id="currentChart"></canvas>
+    <canvas id="powerChart"></canvas>
+    <canvas id="frequencyChart"></canvas>
+    <canvas id="tempChart"></canvas>
+
+</div>
+
+<script>
+const API_URL = "https://YOUR-BACKEND-URL/data";
+
+let labels = [];
+let voltageData = [];
+let currentData = [];
+let powerData = [];
+let frequencyData = [];
+let tempData = [];
+
+function createChart(ctx, label, data) {
+    return new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: label,
+                data: data,
+                borderWidth: 2,
+                fill: false
+            }]
+        }
     });
-  </script>
+}
+
+const voltageChart = createChart(document.getElementById('voltageChart'), "Voltage (V)", voltageData);
+const currentChart = createChart(document.getElementById('currentChart'), "Current (A)", currentData);
+const powerChart = createChart(document.getElementById('powerChart'), "Power (W)", powerData);
+const frequencyChart = createChart(document.getElementById('frequencyChart'), "Frequency (Hz)", frequencyData);
+const tempChart = createChart(document.getElementById('tempChart'), "Temperature (°C)", tempData);
+
+async function updateData() {
+    const res = await fetch(API_URL);
+    const d = await res.json();
+
+    const time = new Date().toLocaleTimeString();
+    if (labels.length > 10) labels.shift();
+    labels.push(time);
+
+    function push(arr, val) {
+        if (arr.length > 10) arr.shift();
+        arr.push(val);
+    }
+
+    document.getElementById("voltage").innerText = d.voltage;
+    document.getElementById("current").innerText = d.current;
+    document.getElementById("frequency").innerText = d.fr;
+    document.getElementById("pf").innerText = d.pf;
+    document.getElementById("power").innerText = d.power;
+    document.getElementById("energy").innerText = d.enrg;
+    document.getElementById("security").innerText = d.security;
+
+    push(voltageData, d.voltage);
+    push(currentData, d.current);
+    push(powerData, d.power);
+    push(frequencyData, d.fr);
+    push(tempData, d.temp);
+
+    voltageChart.update();
+    currentChart.update();
+    powerChart.update();
+    frequencyChart.update();
+    tempChart.update();
+}
+
+setInterval(updateData, 1000);
+</script>
 
 </body>
 </html>
