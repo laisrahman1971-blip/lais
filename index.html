@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Smart Ammeter</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body style="font-family: Arial; text-align: center;">
+
+  <h2>Smart Ammeter Dashboard</h2>
+
+  <p>Current: <span id="current">0</span> A</p>
+  <p>Voltage: <span id="voltage">0</span> V</p>
+  <p>Power: <span id="power">0</span> W</p>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+    apiKey: "AIzaSyCmNDd0L_EZ0JbZIzsVUUFJOHInOVGcNEY",
+    authDomain: "smart-ammeter.firebaseapp.com",
+    databaseURL: "https://smart-ammeter-default-rtdb.firebaseio.com",
+    projectId: "smart-ammeter",
+    storageBucket: "smart-ammeter.firebasestorage.app",
+    messagingSenderId: "222508610296",
+    appId: "1:222508610296:web:4304a37efa0013f785c10d",
+    measurementId: "G-8CTL2GGFWZ"
+  };
+    firebase.initializeApp(firebaseConfig);
+
+    const db = firebase.database();
+
+    db.ref("meter").on("value", (snapshot) => {
+      const data = snapshot.val();
+
+      document.getElementById("current").innerText = data.current;
+      document.getElementById("voltage").innerText = data.voltage;
+      document.getElementById("power").innerText =
+        (data.current * data.voltage).toFixed(2);
+    });
+  </script>
+
+</body>
+</html>
